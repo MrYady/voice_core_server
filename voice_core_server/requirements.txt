@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+faster-whisper
+numpy
+torch
+transformers
+websockets
+ollama

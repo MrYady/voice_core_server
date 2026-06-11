@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictado en Tiempo Real - Panel de Control</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #4fc3f7;
+            margin-top: 0;
+            font-weight: 400;
+        }
+        .status {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ff5252;
+            display: inline-block;
+        }
+        .badge.connected {
+            background-color: #69f0ae;
+        }
+        #transcript-box {
+            width: 100%;
+            height: 300px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .word-stream {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎙️ Transcripción en Tiempo Real</h1>
+    <div class="status">
+        <span id="status-indicator" class="badge"></span>
+        <span id="status-text">Desconectado del servidor de voz</span>
+    </div>
+    <div id="transcript-box" class="word-stream">Esperando audio del micrófono...</div>
+</div>
+
+<script>
+    const box = document.getElementById('transcript-box');
+    const indicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+
+    // Nos conectamos al endpoint de suscripción que creamos en server.py
+    const ws = new WebSocket("ws://127.0.0.1:8000/agentes/suscripcion");
+
+    ws.onopen = () => {
+        indicator.classList.add('connected');
+        statusText.innerText = "Escuchando flujo de transcripción activo...";
+        box.innerText = ""; 
+    };
+
+    ws.onmessage = (event) => {
+        // Añadimos el nuevo texto detectado con un espacio
+        box.innerText += event.data + " ";
+        // Auto-scroll hacia abajo para ver siempre lo último que se habla
+        box.scrollTop = box.scrollHeight;
+    };
+
+    ws.onclose = () => {
+        indicator.classList.remove('connected');
+        statusText.innerText = "Conexión perdida. Intentando reconectar...";
+    };
+</script>
+</body>
+</html>
